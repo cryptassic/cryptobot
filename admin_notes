@@ -1,0 +1,4 @@
+
+apt install libpq-dev
+
+pm2 start src/bybit_spot_trades.py --name BTCUSDT_SPOT --interpreter python3 -- --symbol BTCUSDT --server ap-southeast-1a

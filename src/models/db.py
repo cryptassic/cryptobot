@@ -1,0 +1,16 @@
+SPOT_TRADE_BYBIT_COLUMNS = [
+    "time",
+    "trade_id",
+    "trade_type",
+    "trade_fill_time",
+    "trade_side",
+    "trade_symbol",
+    "trade_qty",
+    "trade_price",
+    "trades_count",
+    "block_trade",
+    "server",
+    "exchange",
+    "rx_time",
+    "latency",
+]
