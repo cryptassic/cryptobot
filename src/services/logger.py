@@ -1,19 +1,43 @@
+import os
 import logging
+from pathlib import Path
 
 LEVEL = logging.INFO
+
+# LOGS_PATH = Logger.root_path()+"./logs"
+
+
+def root_path() -> Path:
+    from os.path import join, realpath
+
+    return Path(realpath(join(__file__, "../../../")))
+
+
+def create_folder():
+    try:
+        if not os.path.exists(Logger.LOGS_PATH):
+            # Create the folder
+            os.makedirs(Logger.LOGS_PATH)
+    except Exception as e:
+        print(e)
 
 
 class Logger:
     logger: logging.Logger
+    LOGS_PATH = root_path().joinpath("./logs")
 
     def __init__(self, name):
+        self.path = Logger.LOGS_PATH.as_posix() + f"/{name}.log"
+
+        create_folder()
+
         self.logger = logging.getLogger(name)
         self.logger.setLevel(LEVEL)
 
         self.logger.propagate = False
 
         c_handler = logging.StreamHandler()
-        f_handler = logging.FileHandler(f"{name}.log")
+        f_handler = logging.FileHandler(self.path)
         c_handler.setLevel(LEVEL)
         f_handler.setLevel(LEVEL)
 
@@ -46,6 +70,6 @@ class Logger:
         price: str,
         type: str = "SINGLE",
     ):
-        self.info(
+        self.debug(
             f"ts: {dispatch_ts} s: {symbol} S: {side} v: {qty} p: {price} t: {type}"
         )

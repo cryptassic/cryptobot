@@ -12,17 +12,18 @@ from models.db import SPOT_TRADE_BYBIT_COLUMNS
 
 USER = os.environ.get("DB_USER", None)
 PASSWORD = os.environ.get("DB_PASSWORD", None)
-
+ENV = os.environ.get("ENV", None)
 logger = Logger("db")
 
 MAX_BATCH_SIZE = 10
-DB_TABLE = "bybit_spot_trade"
+DB_TABLE = "bybit_spot_trade" if ENV == "production" else "test_table"
 
 
 class Database:
-    def __init__(self, server: str):
+    def __init__(self, server: str, symbol: str):
         self.batch = []
         self.server = server
+        self.symbol = symbol
         self.logger = Logger("db")
         if USER and PASSWORD:
             self.connection = psycopg2.connect(
@@ -39,17 +40,13 @@ class Database:
         return self.connection.cursor()
 
     def add_bybit_spot_trade(self, trade: SpotTradeBybit, data_recv_ts: int):
-        # time = trade.ts
         time = self._get_timestamptz(trade.ts)
-        # trade_id = int(trade.data.i)
         trade_id = trade.data.i
         trade_type = "AGGREGATE" if trade.trades_count > 1 else "SINGLE"
         trade_fill_time = self._get_timestamptz(trade.data.T)
         trade_side = trade.data.S
         trade_symbol = trade.data.s
-        # trade_qty = float(trade.data.v)
         trade_qty = trade.data.v
-        # trade_price = float(trade.data.p)
         trade_price = trade.data.p
         trades_count = trade.trades_count
         block_trade = trade.data.BT
@@ -77,6 +74,7 @@ class Database:
         if len(self.batch) >= MAX_BATCH_SIZE:
             self.__execute_batch()
             self.batch = []
+            self.logger.info(f"{trade_symbol} INSERT {MAX_BATCH_SIZE} BATCH")
 
         self.batch.append(data)
 
@@ -100,4 +98,4 @@ class Database:
         except Exception as e:
             # If an error occurs, the transaction is rolled back.
             self.connection.rollback()
-            self.logger.error(f"{e}")
+            self.logger.error(f"{self.symbol} ERROR:{e}")

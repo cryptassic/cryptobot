@@ -33,24 +33,26 @@ def handle_trade(message):
         "AGGREGATE" if trade.trades_count > 1 else "SINGLE",
     )
 
-    logger.info(f"latency: {rx_ts-global_ts} ms trade_count: {trade.trades_count}")
+    logger.debug(f"latency: {rx_ts-global_ts} ms trade_count: {trade.trades_count}")
     db.add_bybit_spot_trade(trade, rx_ts)
 
 
 def main(args):
     global db
     global logger
-
-    db = Database(server=args.server)
     logger = Logger(f"bybit_spot_{args.symbol.upper()}")
+    try:
+        db = Database(server=args.server, symbol=args.symbol.upper())
 
-    # Shutdown server gracefully to close all connections and minimize hanging connections
-    signal.signal(signal.SIGINT, shutdown_handler)
+        # Shutdown server gracefully to close all connections and minimize hanging connections
+        signal.signal(signal.SIGINT, shutdown_handler)
 
-    ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
+        ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
 
-    while True:
-        sleep(1)
+        while True:
+            sleep(1)
+    except Exception as e:
+        logger.error(e)
 
 
 if __name__ == "__main__":

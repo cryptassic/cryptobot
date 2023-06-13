@@ -25,5 +25,22 @@ CREATE TABLE bybit_spot_trade (
   latency REAL NOT NULL
 );
 
+CREATE TABLE test_table (
+  time TIMESTAMPTZ NOT NULL,
+  trade_id BIGINT NOT NULL,
+  trade_type TEXT NOT NULL,
+  trade_fill_time TIMESTAMPTZ NOT NULL,
+  trade_side TEXT NOT NULL,
+  trade_symbol TEXT NOT NULL,
+  trade_qty REAL NOT NULL,
+  trade_price REAL NOT NULL,
+  trades_count SMALLINT NOT NULL,
+  block_trade BOOLEAN NOT NULL,
+  server TEXT NOT NULL,
+  exchange TEXT NOT NULL,
+  rx_time TIMESTAMPTZ NOT NULL,
+  latency REAL NOT NULL
+);
+
  -- Clean table
 DELETE FROM bybit_spot_trade;
