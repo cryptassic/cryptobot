@@ -26,7 +26,7 @@ def load_tokens():
     return tokens
 
 
-size = 10
+size = 1
 tokens = [token.split(":")[0] for token in load_tokens()][:size]
 
 apps = [get_app(symbol) for symbol in tokens]

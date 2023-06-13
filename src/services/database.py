@@ -13,7 +13,6 @@ from models.db import SPOT_TRADE_BYBIT_COLUMNS
 USER = os.environ.get("DB_USER", None)
 PASSWORD = os.environ.get("DB_PASSWORD", None)
 ENV = os.environ.get("ENV", None)
-logger = Logger("db")
 
 MAX_BATCH_SIZE = 10
 DB_TABLE = "bybit_spot_trade" if ENV == "production" else "test_table"
@@ -24,7 +23,7 @@ class Database:
         self.batch = []
         self.server = server
         self.symbol = symbol
-        self.logger = Logger("db")
+        self.logger = Logger("db", symbol)
         if USER and PASSWORD:
             self.connection = psycopg2.connect(
                 user=USER,
@@ -74,7 +73,7 @@ class Database:
         if len(self.batch) >= MAX_BATCH_SIZE:
             self.__execute_batch()
             self.batch = []
-            self.logger.info(f"{trade_symbol} INSERT {MAX_BATCH_SIZE} BATCH")
+            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
 
         self.batch.append(data)
 
@@ -98,4 +97,4 @@ class Database:
         except Exception as e:
             # If an error occurs, the transaction is rolled back.
             self.connection.rollback()
-            self.logger.error(f"{self.symbol} ERROR:{e}")
+            self.logger.error(f"{e}")

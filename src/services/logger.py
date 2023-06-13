@@ -26,7 +26,7 @@ class Logger:
     logger: logging.Logger
     LOGS_PATH = root_path().joinpath("./logs")
 
-    def __init__(self, name):
+    def __init__(self, name, symbol):
         self.path = Logger.LOGS_PATH.as_posix() + f"/{name}.log"
 
         create_folder()
@@ -41,7 +41,7 @@ class Logger:
         c_handler.setLevel(LEVEL)
         f_handler.setLevel(LEVEL)
 
-        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        formatter = logging.Formatter(f"%(asctime)s %(levelname)s {symbol} %(message)s")
         c_handler.setFormatter(formatter)
         f_handler.setFormatter(formatter)
 

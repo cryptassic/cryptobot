@@ -40,7 +40,8 @@ def handle_trade(message):
 def main(args):
     global db
     global logger
-    logger = Logger(f"bybit_spot_{args.symbol.upper()}")
+    # logger = Logger(f"bybit_spot_{args.symbol.upper()}")
+    logger = Logger("bybit_spot_trades", args.symbol)
     try:
         db = Database(server=args.server, symbol=args.symbol.upper())
 
