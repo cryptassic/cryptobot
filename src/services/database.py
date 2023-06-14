@@ -15,7 +15,7 @@ USER = os.environ.get("DB_USER", None)
 PASSWORD = os.environ.get("DB_PASSWORD", None)
 ENV = os.environ.get("ENV", None)
 
-MAX_BATCH_SIZE = 10
+MAX_BATCH_SIZE = 100
 DB_TABLE = "bybit_spot_trade" if ENV == "production" else "test_table"
 
 

@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import signal
 import argparse
 from time import sleep, time, perf_counter
@@ -14,9 +15,8 @@ from services.metrics import Metrics
 
 import cProfile
 
-ws = WebSocket(testnet=False, channel_type="spot")
-
 ENV = os.environ.get("ENV", None)
+MAX_SYMBOLS = 20
 
 
 def shutdown_handler(signum, frame):
@@ -26,7 +26,9 @@ def shutdown_handler(signum, frame):
         if profiler:
             profiler.disable()
             profiler.print_stats()
-    ws.exit()
+
+    for conn in ws_connections:
+        conn.exit()
     db.close()
     sys.exit(0)
 
@@ -66,10 +68,36 @@ def handle_trade(message):
     )
 
 
+def init_connections():
+    connections = []
+    # We can only subscribe to 10 symbols per connection
+
+    total_symbols = len(SYMBOLS[:MAX_SYMBOLS])
+
+    conn_required = math.ceil(total_symbols / 10)
+
+    symbol_start_slice = 0
+    symbol_end_slice = 10
+
+    for _ in range(0, conn_required):
+        ws = WebSocket(testnet=False, channel_type="spot")
+        ws_symbols = SYMBOLS[symbol_start_slice:symbol_end_slice]
+
+        ws.trade_stream(symbol=ws_symbols, callback=handle_trade)
+
+        connections.append(ws)
+
+        symbol_start_slice = symbol_end_slice
+        symbol_end_slice += 10
+
+    return connections
+
+
 def main(args):
     global db
     global logger
     global metrics
+    global ws_connections
     logger = Logger("bybit_spot_trades")
 
     metrics = Metrics()
@@ -87,8 +115,9 @@ def main(args):
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)
 
+        ws_connections = init_connections()
         # ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
-        ws.trade_stream(symbol=SYMBOLS[:1], callback=handle_trade)
+        # ws.trade_stream(symbol=SYMBOLS[:1], callback=handle_trade)
 
         while True:
             sleep(1)
