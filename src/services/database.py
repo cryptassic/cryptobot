@@ -20,7 +20,7 @@ DB_TABLE = "bybit_spot_trade" if ENV == "production" else "test_table"
 
 
 class Database:
-    def __init__(self, server: str, symbol: str):
+    def __init__(self, server: str):
         self.batch = []
         self.server = server
         self.logger = Logger("db")

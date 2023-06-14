@@ -113,14 +113,27 @@ def main(args):
         profiler.enable()
 
     try:
-        db = Database(server=args.server, symbol=args.symbol.upper())
+        db = Database(server=args.server)
 
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)
 
         # ws_connections = init_connections()
         # ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
-        ws.trade_stream(symbol=SYMBOLS[:10], callback=handle_trade)
+
+        # Currently we handle 10 symbols per ws connection and single ws connection per application.
+        # So we need a way to index which client will be running which symbols.
+        # This is achieved by using cli argument - index
+        client_ix = args.index
+        symbols_start = 0 if client_ix == 0 else 10 * client_ix
+        symbols_end = 10 if client_ix == 0 else 10 * (client_ix + 1)
+
+        if symbols_end > len(SYMBOLS):
+            symbols_end = len(SYMBOLS)
+
+        symbols = SYMBOLS[symbols_start:symbols_end]
+
+        ws.trade_stream(symbol=symbols, callback=handle_trade)
 
         while True:
             sleep(1)
@@ -131,8 +144,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Bybit Spot Trade Stream")
     # Add arguments
-    parser.add_argument("--symbol", type=str, help="Symbol to subscribe")
-    parser.add_argument("--server", type=str, help="Server name")
+    # parser.add_argument("--symbol", type=str, help="Symbol to subscribe")
+    parser.add_argument("--index", type=int, help="Bot index", default=0)
+    parser.add_argument("--server", type=str, help="Server name", default="default")
     args = parser.parse_args()
 
     main(args)
