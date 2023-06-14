@@ -1,31 +1,51 @@
+import os
 import sys
 import signal
 import argparse
-from time import sleep, time
+from time import sleep, time, perf_counter
 
 from pybit.unified_trading import WebSocket
 
 from models.trade import SpotTradeBybit
+from models.bybit_symbols import SYMBOLS
 from services.logger import Logger
 from services.database import Database
+from services.metrics import Metrics
+
+import cProfile
 
 ws = WebSocket(testnet=False, channel_type="spot")
+
+ENV = os.environ.get("ENV", None)
 
 
 def shutdown_handler(signum, frame):
     # Perform any cleanup tasks here
     logger.info("Shutting down...")
+    if ENV and ENV == "development":
+        if profiler:
+            profiler.disable()
+            profiler.print_stats()
     ws.exit()
+    db.close()
     sys.exit(0)
 
 
 def handle_trade(message):
-    rx_ts = int(time() * 1000)
+    # Used for profiling this function
+    func_start_time = perf_counter()
+
+    metrics.increase()
+
     trade = SpotTradeBybit(**message)
-    global_ts = trade.ts
+
+    # Time when message was dispatched from server
+    tx_ts = trade.ts
+    # Time when message was received
+    rx_ts = int(time() * 1000)
 
     logger.log_trade(
-        global_ts,
+        tx_ts,
         trade.data.S,
         trade.data.s,
         trade.data.v,
@@ -33,22 +53,42 @@ def handle_trade(message):
         "AGGREGATE" if trade.trades_count > 1 else "SINGLE",
     )
 
-    logger.debug(f"latency: {rx_ts-global_ts} ms trade_count: {trade.trades_count}")
     db.add_bybit_spot_trade(trade, rx_ts)
+
+    # Used for profiling this function
+    func_end_time = perf_counter()
+
+    latency = rx_ts - tx_ts
+    execution_time = func_end_time - func_start_time
+
+    logger.debug(
+        f"latency: {latency} ms execution: {(execution_time):.6f} ms mps: {metrics.message_rate} trade_count: {trade.trades_count}"
+    )
 
 
 def main(args):
     global db
     global logger
-    # logger = Logger(f"bybit_spot_{args.symbol.upper()}")
-    logger = Logger("bybit_spot_trades", args.symbol)
+    global metrics
+    logger = Logger("bybit_spot_trades")
+
+    metrics = Metrics()
+
+    # Understanding how much this client can handle
+    if ENV and ENV == "development":
+        global profiler
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+
     try:
         db = Database(server=args.server, symbol=args.symbol.upper())
 
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)
 
-        ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
+        # ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
+        ws.trade_stream(symbol=SYMBOLS[:1], callback=handle_trade)
 
         while True:
             sleep(1)

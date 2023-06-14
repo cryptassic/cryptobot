@@ -1,6 +1,7 @@
 import os
 import datetime
 import pytz
+import time as perf_time
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -22,8 +23,7 @@ class Database:
     def __init__(self, server: str, symbol: str):
         self.batch = []
         self.server = server
-        self.symbol = symbol
-        self.logger = Logger("db", symbol)
+        self.logger = Logger("db")
         if USER and PASSWORD:
             self.connection = psycopg2.connect(
                 user=USER,
@@ -76,6 +76,14 @@ class Database:
             self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
 
         self.batch.append(data)
+
+    def close(self):
+        try:
+            if not self.connection.closed:
+                self.logger.info("Closed database connection")
+                self.connection.close()
+        except Exception as e:
+            self.logger.error(e)
 
     def _get_timestamptz(self, timestamp):
         return (

@@ -2,7 +2,9 @@ import os
 import logging
 from pathlib import Path
 
-LEVEL = logging.INFO
+ENV = os.environ.get("ENV", None)
+
+LEVEL = logging.INFO if ENV and ENV == "production" else logging.DEBUG
 
 # LOGS_PATH = Logger.root_path()+"./logs"
 
@@ -26,7 +28,7 @@ class Logger:
     logger: logging.Logger
     LOGS_PATH = root_path().joinpath("./logs")
 
-    def __init__(self, name, symbol):
+    def __init__(self, name):
         self.path = Logger.LOGS_PATH.as_posix() + f"/{name}.log"
 
         create_folder()
@@ -41,7 +43,8 @@ class Logger:
         c_handler.setLevel(LEVEL)
         f_handler.setLevel(LEVEL)
 
-        formatter = logging.Formatter(f"%(asctime)s %(levelname)s {symbol} %(message)s")
+        formatter = logging.Formatter(f"%(asctime)s %(levelname)s %(message)s")
+
         c_handler.setFormatter(formatter)
         f_handler.setFormatter(formatter)
 
