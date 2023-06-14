@@ -15,6 +15,8 @@ from services.metrics import Metrics
 
 import cProfile
 
+ws = WebSocket(testnet=False, channel_type="spot")
+
 ENV = os.environ.get("ENV", None)
 MAX_SYMBOLS = 50
 
@@ -27,8 +29,9 @@ def shutdown_handler(signum, frame):
             profiler.disable()
             profiler.print_stats()
 
-    for conn in ws_connections:
-        conn.exit()
+    # for conn in ws_connections:
+    # conn.exit()
+    ws.exit()
     db.close()
     sys.exit(0)
 
@@ -115,9 +118,9 @@ def main(args):
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)
 
-        ws_connections = init_connections()
+        # ws_connections = init_connections()
         # ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
-        # ws.trade_stream(symbol=SYMBOLS[:1], callback=handle_trade)
+        ws.trade_stream(symbol=SYMBOLS[:10], callback=handle_trade)
 
         while True:
             sleep(1)
