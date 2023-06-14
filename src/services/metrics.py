@@ -13,6 +13,11 @@ class Metrics:
             if self.start_time == 0:
                 self.start_time = perf_counter()
 
+            # Reset every minute to have better understanding of performance
+            elif (perf_counter() - self.start_time) >= 60:
+                self.start_time = perf_counter()
+                self.messages_received = 0
+
             self.messages_received += 1
 
     @property

@@ -16,7 +16,7 @@ from services.metrics import Metrics
 import cProfile
 
 ENV = os.environ.get("ENV", None)
-MAX_SYMBOLS = 20
+MAX_SYMBOLS = 50
 
 
 def shutdown_handler(signum, frame):
