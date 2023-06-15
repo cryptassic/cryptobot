@@ -1,7 +1,8 @@
 import os
 import datetime
 import pytz
-import time as perf_time
+
+# import time as perf_time
 
 import psycopg2
 from psycopg2.extras import execute_values

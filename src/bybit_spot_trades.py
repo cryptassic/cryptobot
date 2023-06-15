@@ -2,18 +2,18 @@ import os
 import sys
 import math
 import signal
+import cProfile
 import argparse
 from time import sleep, time, perf_counter
 
 from pybit.unified_trading import WebSocket
 
 from models.trade import SpotTradeBybit
-from models.bybit_symbols import SYMBOLS
+from models.bybit_symbols import all_symbols
 from services.logger import Logger
 from services.database import Database
 from services.metrics import Metrics
 
-import cProfile
 
 ws = WebSocket(testnet=False, channel_type="spot")
 
@@ -29,8 +29,6 @@ def shutdown_handler(signum, frame):
             profiler.disable()
             profiler.print_stats()
 
-    # for conn in ws_connections:
-    # conn.exit()
     ws.exit()
     db.close()
     sys.exit(0)
@@ -71,36 +69,11 @@ def handle_trade(message):
     )
 
 
-def init_connections():
-    connections = []
-    # We can only subscribe to 10 symbols per connection
-
-    total_symbols = len(SYMBOLS[:MAX_SYMBOLS])
-
-    conn_required = math.ceil(total_symbols / 10)
-
-    symbol_start_slice = 0
-    symbol_end_slice = 10
-
-    for _ in range(0, conn_required):
-        ws = WebSocket(testnet=False, channel_type="spot")
-        ws_symbols = SYMBOLS[symbol_start_slice:symbol_end_slice]
-
-        ws.trade_stream(symbol=ws_symbols, callback=handle_trade)
-
-        connections.append(ws)
-
-        symbol_start_slice = symbol_end_slice
-        symbol_end_slice += 10
-
-    return connections
-
-
 def main(args):
     global db
     global logger
     global metrics
-    global ws_connections
+
     logger = Logger("bybit_spot_trades")
 
     metrics = Metrics()
@@ -118,9 +91,6 @@ def main(args):
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)
 
-        # ws_connections = init_connections()
-        # ws.trade_stream(symbol=args.symbol.upper(), callback=handle_trade)
-
         # Currently we handle 10 symbols per ws connection and single ws connection per application.
         # So we need a way to index which client will be running which symbols.
         # This is achieved by using cli argument - index
@@ -128,10 +98,10 @@ def main(args):
         symbols_start = 0 if client_ix == 0 else 10 * client_ix
         symbols_end = 10 if client_ix == 0 else 10 * (client_ix + 1)
 
-        if symbols_end > len(SYMBOLS):
-            symbols_end = len(SYMBOLS)
+        if symbols_end > len(all_symbols):
+            symbols_end = len(all_symbols)
 
-        symbols = SYMBOLS[symbols_start:symbols_end]
+        symbols = all_symbols[symbols_start:symbols_end]
 
         ws.trade_stream(symbol=symbols, callback=handle_trade)
 
@@ -143,8 +113,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Bybit Spot Trade Stream")
-    # Add arguments
-    # parser.add_argument("--symbol", type=str, help="Symbol to subscribe")
+
     parser.add_argument("--index", type=int, help="Bot index", default=0)
     parser.add_argument("--server", type=str, help="Server name", default="default")
     args = parser.parse_args()

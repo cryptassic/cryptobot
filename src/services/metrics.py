@@ -4,7 +4,7 @@ import threading
 
 class Metrics:
     def __init__(self):
-        self.lock = threading.RLock()
+        self.lock = threading.Lock()
         self.start_time = 0
         self.messages_received = 0
 

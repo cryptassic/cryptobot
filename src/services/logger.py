@@ -24,7 +24,12 @@ def create_folder():
         print(e)
 
 
+def get_identifier(exchange: str, data_type: str) -> str:
+    return f"[{exchange}_{data_type}] "
+
+
 class Logger:
+    _instances = None
     logger: logging.Logger
     LOGS_PATH = root_path().joinpath("./logs")
 
@@ -76,3 +81,11 @@ class Logger:
         self.debug(
             f"ts: {dispatch_ts} s: {symbol} S: {side} v: {qty} p: {price} t: {type}"
         )
+
+    @classmethod
+    def getLogger(cls, logger_name: str):
+        if not cls._instances or not cls._instances.get(logger_name, None):
+            cls._instances = {}
+            cls._instances[logger_name] = cls(logger_name)
+
+        return cls._instances[logger_name]

@@ -1,4 +1,13 @@
-SYMBOLS = [
+def get_symbols(intrument_type: str):
+    if intrument_type.lower() == "spot":
+        return all_symbols
+    elif intrument_type.lower() == "perp":
+        return PERP_SYMBOLS
+
+    return []
+
+
+all_symbols = [
     "ETHUSDC",
     "BTCUSDC",
     "BTCUSDT",
@@ -100,3 +109,4 @@ SYMBOLS = [
     "LADYSUSDT",
     "WEMIXUSDT",
 ]
+PERP_SYMBOLS = []
