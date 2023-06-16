@@ -2,6 +2,11 @@ import os
 import pytz
 import datetime
 
+import copy
+import threading
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 # import time as perf_time
 
 import psycopg2
@@ -32,6 +37,10 @@ class Database:
         self.batch = []
         self.server = server
         self.logger = Logger("db")
+
+        self.futures = []
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.lock = threading.Lock()
 
         self.DB_TABLE = (
             entity_type.value[0]
@@ -86,12 +95,16 @@ class Database:
             latency,
         )
 
-        if len(self.batch) >= MAX_BATCH_SIZE:
-            self.__execute_batch()
-            self.batch = []
-            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
+        with self.lock:
+            if len(self.batch) >= MAX_BATCH_SIZE:
+                commit_batch = copy.deepcopy(self.batch)
+                self.batch = []
 
-        self.batch.append(data)
+                future = self.executor.submit(self.__execute_batch, commit_batch)
+                self.futures.append(future)
+                self.__clean_futures()
+
+            self.batch.append(data)
 
     def add_bybit_spot_orderbook(self, depth: MarketDepth, data_recv_ts: int):
         time = self._get_timestamptz(depth.ts)
@@ -125,20 +138,31 @@ class Database:
             + (book_symbol, server, exchange, rx_time, latency)
         )
 
-        if len(self.batch) >= MAX_BATCH_SIZE:
-            self.__execute_batch()
-            self.batch = []
-            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
+        with self.lock:
+            if len(self.batch) >= MAX_BATCH_SIZE:
+                commit_batch = copy.deepcopy(self.batch)
+                self.batch = []
 
-        self.batch.append(data)
+                future = self.executor.submit(self.__execute_batch, commit_batch)
+                self.futures.append(future)
+                self.__clean_futures()
+
+            self.batch.append(data)
 
     def close(self):
         try:
+            # Waiting for all writes to complete before closing the connection
+            for future in as_completed(self.futures):
+                try:
+                    future.result()  # this will block until the future is complete
+                except Exception as ex:
+                    self.logger.error(ex)
+
             if not self.connection.closed:
                 self.logger.info("Closed database connection")
                 self.connection.close()
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"Here {e}")
 
     def _get_timestamptz(self, timestamp):
         return (
@@ -147,7 +171,11 @@ class Database:
             .strftime("%Y-%m-%d %H:%M:%S.%f %z")
         )
 
-    def __execute_batch(self):
+    def __clean_futures(self):
+        # remove completed futures
+        self.futures = [future for future in self.futures if not future.done()]
+
+    def __execute_batch(self, batch):
         cursor = self.get_cursor()
 
         sql = f"""
@@ -155,9 +183,11 @@ class Database:
         VALUES %s;"""
 
         try:
-            execute_values(cursor, sql, self.batch)
+            execute_values(cursor, sql, batch)
             self.connection.commit()
+            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
         except Exception as e:
             # If an error occurs, the transaction is rolled back.
-            self.connection.rollback()
+            if not self.connection.closed:
+                self.connection.rollback()
             self.logger.error(f"{e}")

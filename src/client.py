@@ -4,7 +4,8 @@ import signal
 import cProfile
 
 from typing import List
-from pprint import pprint
+
+# from pprint import pprint
 from time import perf_counter, time
 from pybit.unified_trading import WebSocket
 
