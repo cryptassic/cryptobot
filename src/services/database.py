@@ -185,7 +185,7 @@ class Database:
         try:
             execute_values(cursor, sql, batch)
             self.connection.commit()
-            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH")
+            self.logger.info(f"INSERT {MAX_BATCH_SIZE} BATCH INTO {self.DB_TABLE}")
         except Exception as e:
             # If an error occurs, the transaction is rolled back.
             if not self.connection.closed:
