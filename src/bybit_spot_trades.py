@@ -10,6 +10,8 @@ from pybit.unified_trading import WebSocket
 
 from models.trade import SpotTradeBybit
 from models.bybit_symbols import all_symbols
+from models.db import BYBIT_TRADE
+
 from services.logger import Logger
 from services.database import Database
 from services.metrics import Metrics
@@ -86,7 +88,7 @@ def main(args):
         profiler.enable()
 
     try:
-        db = Database(server=args.server)
+        db = Database(server=args.server, entity_type=BYBIT_TRADE)
 
         # Shutdown server gracefully to close all connections and minimize hanging connections
         signal.signal(signal.SIGINT, shutdown_handler)

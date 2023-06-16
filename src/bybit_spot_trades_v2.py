@@ -4,12 +4,19 @@ from time import sleep
 from client import Bybit
 from services.logger import Logger, get_identifier
 
+from models.db import BYBIT_TRADE
+
 logger = Logger.getLogger("application")
 
 
 def main(args):
     try:
-        client = Bybit(server=args.server, instrument_type="spot", index=args.index)
+        client = Bybit(
+            server=args.server,
+            instrument_type="spot",
+            index=args.index,
+            entity_type=BYBIT_TRADE,
+        )
 
         # Subscribe to orderbook messages
         client.subscribe_trades()

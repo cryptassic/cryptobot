@@ -4,15 +4,18 @@ import signal
 import cProfile
 
 from typing import List
+from pprint import pprint
 from time import perf_counter, time
 from pybit.unified_trading import WebSocket
 
 from services.logger import Logger
 from services.database import Database
 from services.metrics import Metrics
+from services.orderbook import BookKeeper
 
 from models.trade import SpotTradeBybit
 from models.bybit_symbols import get_symbols
+from models.db import ExchangeDataEntityType
 
 
 ENV = os.environ.get("ENV", None)
@@ -31,6 +34,7 @@ class Client:
         server: str,
         instrument_type: str,
         index: int,
+        entity_type: ExchangeDataEntityType,
     ):
         self.__start_profiler()
         self.instrument_type = instrument_type
@@ -40,7 +44,7 @@ class Client:
 
         self.__load_symbols(index)
 
-        self.db = Database(server=server)
+        self.db = Database(server=server, entity_type=entity_type)
         self.ws = WebSocket(testnet=False, channel_type=instrument_type.lower())
 
         # Shutdown server gracefully to close all connections and minimize hanging connections
@@ -66,6 +70,16 @@ class Client:
             self.profiler.enable()
 
     def __load_symbols(self, index: int):
+        # For debugging purposes we only load single symbol
+        if index == -1:
+            self.symbols = [get_symbols(self.instrument_type)[0]]
+            return
+
+        # Another for debugging purposes ;)
+        elif index == -69:
+            self.symbols = get_symbols(self.instrument_type)[:3]
+            return
+
         # Currently we handle 10 symbols per ws connection and single ws connection per application.
         # So we need a way to index which client will be running which symbols.
         # This is achieved by using cli argument - index
@@ -97,6 +111,7 @@ class Bybit(Client):
             - `server` (str) : Server name where client is running
             - `instrument_type` (str) : SPOT or PERP
             - `index` (int) : Client index used to distribute tasks
+            - `entity_type` (ExchangeDataEntityType) : Data type
 
         """
         super().__init__(*args, **kwargs)
@@ -136,7 +151,60 @@ class Bybit(Client):
         )
 
     def __handle_orderbook(self, message):
-        pass
+        # Used for profiling this function
+        func_start_time = perf_counter()
+
+        # Time when message was received
+        rx_ts = int(time() * 1000)
+
+        if message and message["type"] == "snapshot" or message["data"]["u"] == 1:
+            # Storing all messages in buffer with time window of 1 second.
+            # This allows us to reduce noise and save some storage space in database.
+            #
+            # Normally orderbook data is pushed 10/second.
+            # So, we reduce to only 1/second by aggregating all messages in buffer.
+
+            symbol = message["topic"].split(".")[-1]
+
+            # Orderbook is where we keep marketdepth. It is singleton so no new instances are created.
+            orderbook = BookKeeper.get_instance(symbol)
+
+            # We simply add messages to the buffer from where orderbook.get() method returns accumulated results.
+            # Keep in mind that if buffer is empty or interval window is not passed, then result will be None.
+            orderbook.update(message)
+
+            # We try to get a aggregated object from the buffer. We will get None if buffer is empty or interval window is not passed.
+            c_depth = orderbook.get()
+
+            # Used for profiling this function
+
+            if c_depth:
+                func_end_time = perf_counter()
+
+                latency = rx_ts - message["ts"]
+
+                self.db.add_bybit_spot_orderbook(c_depth, rx_ts)
+
+                self.logger.debug(
+                    f"{symbol}  bid: [{c_depth.data.b[0].size}]{c_depth.data.b[0].price}/{c_depth.data.a[0].price}[{c_depth.data.a[0].size}] : ask execution: {func_end_time-func_start_time:.6f} ms latency: {latency} ms"
+                )
+
+                # self.logger.debug(
+                #     f"[{c_depth.data.b[0].size}]{c_depth.data.b[0].price}/{c_depth.data.a[0].price}[{c_depth.data.a[0].size}]"
+                # )
+
+            # else:
+            #     # self.logger.debug(
+            #     #     f"Buffer size: {len(orderbook.buffer.buffer)} bid: {message['data']['b'][0][0]}/{message['data']['a'][0][0]} :ask"
+            #     # )
+            #     bid = message["data"]["b"][0]
+            #     ask = message["data"]["a"][0]
+            #     self.logger.debug(f"[{bid[1]}]{bid[0]}/{ask[0]}[{ask[1]}]")
+            return
+        else:
+            self.logger.error(
+                f"finnaly delta received {message}. Don't know how to handle this"
+            )
 
     def subscribe_trades(self):
         if self.__can_subscribe():
