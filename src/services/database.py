@@ -19,6 +19,10 @@ from .logger import Logger
 from models.trade import SpotTradeBybit
 from models.db import ExchangeDataEntityType
 
+#
+DB_HOST = os.environ.get("DB_HOST", None)
+DB_PORT = os.environ.get("DB_PORT", None)
+
 USER = os.environ.get("DB_USER", None)
 PASSWORD = os.environ.get("DB_PASSWORD", None)
 ENV = os.environ.get("ENV", None)
@@ -53,8 +57,8 @@ class Database:
             self.connection = psycopg2.connect(
                 user=USER,
                 password=PASSWORD,
-                host="nc7hjuhxja.pb9ebh0mza.tsdb.cloud.timescale.com",
-                port="33076",
+                host=DB_HOST,
+                port=DB_PORT,
                 database="tsdb",
             )
         else:

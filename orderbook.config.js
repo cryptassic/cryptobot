@@ -1,5 +1,10 @@
-const SERVER = "ap-southeast-1a";
+const SERVER = "ubuntu-us-central";
+const DB_HOST = "";
+const DB_PORT = "";
+const DB_USER = "";
+const DB_PASSWORD = "";
 const EXCHANGE = "BYBIT";
+const DB_BATCH_SIZE = 5;
 module.exports = {
   apps: [
     {
@@ -11,9 +16,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -26,9 +41,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -41,9 +66,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -56,9 +91,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -71,9 +116,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -86,9 +141,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -101,9 +166,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -116,9 +191,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -131,9 +216,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
@@ -146,9 +241,19 @@ module.exports = {
       max_restarts: 5,
       env_prod: {
         ENV: "production",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       env_dev: {
         ENV: "development",
+        DB_HOST: DB_HOST,
+        DB_PORT: DB_PORT,
+        DB_USER: DB_USER,
+        DB_PASSWORD: DB_PASSWORD,
+        DB_BATCH_SIZE: DB_BATCH_SIZE,
       },
       interpreter: "./venv/bin/python",
     },
